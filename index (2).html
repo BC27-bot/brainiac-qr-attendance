@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Brainiac Smart QR Attendance</title>
+
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com"></script>
+<!-- QR Scanner -->
+<script src="https://unpkg.com/html5-qrcode"></script>
+
+<link rel="manifest" href="data:application/manifest+json,{ 
+  &quot;name&quot;:&quot;Brainiac Smart Attendance&quot;,
+  &quot;short_name&quot;:&quot;Attendance&quot;,
+  &quot;start_url&quot;:&quot;.&quot;,
+  &quot;display&quot;:&quot;standalone&quot;,
+  &quot;background_color&quot;:&quot;#fff9db&quot;,
+  &quot;theme_color&quot;:&quot;#facc15&quot;
+}">
+
+<style>
+  body {
+    background: linear-gradient(180deg, #fff9db 0%, #facc15 100%);
+    font-family: 'Poppins', sans-serif;
+    text-align: center;
+    color: #4b2e05;
+  }
+  .scanner-box {
+    border: 4px solid #4b2e05;
+    border-radius: 1rem;
+    width: 320px;
+    height: 320px;
+    margin: auto;
+    position: relative;
+    overflow: hidden;
+    animation: glow 2s infinite alternate;
+  }
+  @keyframes glow {
+    0% { box-shadow: 0 0 10px #facc15; }
+    100% { box-shadow: 0 0 30px #b45309; }
+  }
+  .welcome {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-top: 1rem;
+  }
+  /* Splash screen animation */
+  #splash {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: #facc15;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 50;
+    animation: fadeOut 1s ease forwards;
+    animation-delay: 2.5s;
+  }
+  @keyframes fadeOut {
+    to { opacity: 0; visibility: hidden; }
+  }
+  .logo {
+    width: 100px;
+    animation: bounce 2s infinite;
+  }
+  @keyframes bounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+  }
+</style>
+</head>
+
+<body class="flex flex-col items-center justify-center min-h-screen">
+
+  <!-- Splash Screen -->
+  <div id="splash">
+    <img src="https://upload.wikimedia.org/wikipedia/commons/8/89/HD_transparent_picture.png" class="logo mb-4" alt="Brainiac Logo">
+    <h1 class="text-3xl font-bold text-yellow-900">Brainiac International</h1>
+    <p class="text-sm text-yellow-800 mt-2">Smart Attendance System</p>
+    <div class="mt-4 w-48 bg-yellow-300 rounded-full h-2 overflow-hidden">
+      <div class="bg-yellow-900 h-2 animate-[load_2s_linear_forwards]"></div>
+    </div>
+    <style>
+      @keyframes load { from { width: 0; } to { width: 100%; } }
+    </style>
+  </div>
+
+  <!-- Main Content -->
+  <div id="main" class="hidden flex flex-col items-center">
+    <div class="mb-6 mt-4">
+      <img src="https://upload.wikimedia.org/wikipedia/commons/8/89/HD_transparent_picture.png" alt="Logo" class="w-20 mx-auto">
+      <h1 class="text-3xl font-bold text-yellow-800 mt-2">Brainiac Smart Attendance</h1>
+      <p class="text-sm text-yellow-900">Scan your QR to mark attendance</p>
+    </div>
+
+    <div id="reader" class="scanner-box"></div>
+    <div id="result" class="welcome text-green-700"></div>
+  </div>
+
+  <script>
+    // Show main app after splash
+    setTimeout(() => {
+      document.getElementById("splash").style.display = "none";
+      document.getElementById("main").classList.remove("hidden");
+    }, 3000);
+
+    // Send data to Google Sheet
+    function sendToSheet(id, name) {
+      const date = new Date().toLocaleDateString();
+      const time = new Date().toLocaleTimeString();
+      fetch("YOUR_GOOGLE_APPS_SCRIPT_URL", {
+        method: "POST",
+        body: JSON.stringify({ id, name, date, time }),
+      });
+    }
+
+    // When QR is scanned
+    function onScanSuccess(decodedText) {
+      const [id, name] = decodedText.split(",");
+      const resultDiv = document.getElementById("result");
+      resultDiv.innerHTML = `👋 Welcome back, <b>${name}</b>!<br>Attendance recorded at ${new Date().toLocaleTimeString()}`;
+      sendToSheet(id, name);
+    }
+
+    // Start Scanner after splash delay
+    setTimeout(() => {
+      const html5QrCode = new Html5Qrcode("reader");
+      html5QrCode.start(
+        { facingMode: "environment" },
+        { fps: 10, qrbox: 250 },
+        onScanSuccess
+      ).catch(err => {
+        document.getElementById("result").innerHTML = "⚠️ Camera error: " + err;
+      });
+    }, 3200);
+
+    // Offline cache (PWA basic)
+    if ("serviceWorker" in navigator) {
+      const swCode = `
+        self.addEventListener('install', e => {
+          e.waitUntil(caches.open('brainiac-attendance').then(c => c.addAll(['./'])));
+        });
+        self.addEventListener('fetch', e => {
+          e.respondWith(caches.match(e.request).then(r => r || fetch(e.request)));
+        });
+      `;
+      const blob = new Blob([swCode], { type: "text/javascript" });
+      const swUrl = URL.createObjectURL(blob);
+      navigator.serviceWorker.register(swUrl);
+    }
+  </script>
+
+  <footer class="mt-8 text-xs text-yellow-900">
+    © 2025 Brainiac International School & College — Developed by Sunny Studio 🌞
+  </footer>
+
+</body>
+</html>
