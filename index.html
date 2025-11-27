@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>THE BRAINIAC ATTENDANCE SYSTEM</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
+     <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-content">
+                <h1><span class="material-icons">qr_code_scanner</span> BIS Attendance System</h1>
+                <p>BRAINIAC – Smart tracking is here!</p>
+            </div>
+        </header>
+
+        <!-- Scanner Tab -->
+        <div id="scanner" class="tab-content active">
+            <div class="main-content">
+                <!-- Left Side - Scanner -->
+                <div class="scanner-section">
+                    <div class="scanner-container">
+                        <div class="scanner-header">
+                            <h2><span class="material-icons">qr_code_scanner</span> QR Scanner</h2>
+                            <div class="scanner-status" id="scannerStatus">
+                                <span class="status-dot"></span>
+                                Ready to scan
+                            </div>
+                        </div>
+                        
+                        <div class="scanner-box">
+                            <video id="scannerVideo" autoplay playsinline></video>
+                            <div class="scanner-overlay">
+                                <div class="scan-frame">
+                                    <div class="corner top-left"></div>
+                                    <div class="corner top-right"></div>
+                                    <div class="corner bottom-left"></div>
+                                    <div class="corner bottom-right"></div>
+                                </div>
+                                <div class="scan-line"></div>
+                            </div>
+                        </div>
+
+                        <div class="scanner-controls">
+                            <button id="startScanner" class="btn btn-primary" onclick="startScanner()">
+                                <span class="material-icons">play_arrow</span> Start Scanner
+                            </button>
+                            <button id="stopScanner" class="btn btn-danger" onclick="stopScanner()" disabled>
+                                <span class="material-icons">stop</span> Stop Scanner
+                            </button>
+                            <button id="switchCamera" class="btn btn-secondary" onclick="switchCamera()" disabled>
+                                <span class="material-icons">flip_camera_android</span> Switch Camera
+                            </button>
+                        </div>
+
+                        <!-- Recent Scans -->
+                        <div class="recent-scans">
+                            <h3><span class="material-icons">history</span> Recent Attendance</h3>
+                            <div id="recentScansList" class="scans-list">
+                                <div class="empty-state">
+                                    No scans yet. Start scanner to begin tracking attendance.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Side - Dashboard -->
+                <div class="dashboard-section">
+                    <!-- Today's Summary -->
+                    <div class="summary-card">
+                        <h3><span class="material-icons">dashboard</span> Today's Summary</h3>
+                        <div class="summary-content">
+                            <div class="summary-item">
+                                <span class="label">Date:</span>
+                                <span class="value" id="currentDate">Loading...</span>
+                            </div>
+                            <div class="summary-item">
+                                <span class="label">Total Students:</span>
+                                <span class="value" id="totalStudents">0</span>
+                            </div>
+                            <div class="summary-item">
+                                <span class="label">Present Today:</span>
+                                <span class="value" id="presentToday">0</span>
+                            </div>
+                            <div class="summary-item">
+                                <span class="label">Attendance Rate:</span>
+                                <span class="value" id="attendanceRate">0%</span>
+                            </div>
+                            <div class="summary-item">
+                                <span class="label">Last Scan:</span>
+                                <span class="value" id="lastScanTime">--:--:--</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Quick Actions -->
+                    <div class="actions-card">
+                        <h3><span class="material-icons">flash_on</span> Quick Actions</h3>
+                        <div class="action-buttons">
+                            <button class="btn btn-action" onclick="exportToExcel()">
+                                <span class="material-icons">table_chart</span> Export to Excel
+                            </button>
+                            <button class="btn btn-action" onclick="exportAdvancedExcel()">
+                                <span class="material-icons">insights</span> Advanced Export
+                            </button>
+                            <button class="btn btn-action" onclick="exportComprehensiveReport()">
+                                <span class="material-icons">description</span> Comprehensive Report
+                            </button>
+                            <button class="btn btn-action" onclick="manualEntry()">
+                                <span class="material-icons">edit</span> Manual Entry
+                            </button>
+                            <button class="btn btn-action" onclick="markAllPresent()">
+                                <span class="material-icons">check_circle</span> Mark All Present
+                            </button>
+                            <button class="btn btn-action" onclick="markAllAbsent()">
+                                <span class="material-icons">cancel</span> Mark All Absent
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Attendance List -->
+                    <div class="attendance-card">
+                        <div class="card-header">
+                            <h3><span class="material-icons">groups</span> Today's Attendance</h3>
+                            <div class="attendance-filters">
+                                <select id="classFilter" onchange="filterAttendance()">
+                                    <option value="all">All Classes</option>
+                                    <option value="2ndyear">2nd year</option>
+                                    <option value="1styear">1st year</option>
+                                    <option value="class10">class 10</option>
+                                    <option value="class9">class 9</option>
+                                    <option value="class8">class 8</option>
+                                </select>
+                                <select id="statusFilter" onchange="filterAttendance()">
+                                    <option value="all">All Students</option>
+                                    <option value="present">Present</option>
+                                    <option value="absent">Absent</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="attendance-list">
+                            <div id="attendanceList" class="students-list">
+                                <!-- Students will be populated here -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Admin Panel Tab -->
+        <div id="admin" class="tab-content">
+            <div class="admin-header">
+                <h2><span class="material-icons">admin_panel_settings</span> Registration</h2>
+                
+            </div>
+
+            <div class="admin-content">
+                <!-- Left Side - Registration Form -->
+                <div class="registration-section">
+                    <div class="form-card">
+                        <h3><span class="material-icons">person_add</span> Register New Student</h3>
+                        <form id="studentRegistrationForm">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="regStudentId">Student ID *</label>
+                                    <input type="text" id="regStudentId" required placeholder="BIS-1001">
+                                </div>
+                                <div class="form-group">
+                                    <label for="regClass">Class *</label>
+                                    <select id="regClass" required>
+                                        <option value="">Select Class</option>
+                                        <option value="2ndyear">2nd year</option>
+                                        <option value="1styear">1st year</option>
+                                        <option value="class10">class 10</option>
+                                        <option value="class9">class 9</option>
+                                        <option value="class8">class 8</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="regName">Full Name *</label>
+                                <input type="text" id="regName" required placeholder="Enter Your Full Name">
+                            </div>
+
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="regFatherName">Father's Name *</label>
+                                    <input type="text" id="regFatherName" required placeholder="Father Name">
+                                </div>
+                                <div class="form-group">
+                                    <label for="regPhone">Phone Number</label>
+                                    <input type="tel" id="regPhone" placeholder="0300-1234567">
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="regAddress">Address</label>
+                                <input type="text" id="regAddress" placeholder="City, Country">
+                            </div>
+
+                            <div class="form-actions">
+                                <button type="submit" class="btn btn-primary">
+                                    <span class="material-icons">person_add</span> Register Student
+                                </button>
+                                <button type="button" class="btn btn-secondary" onclick="clearRegistrationForm()">
+                                    <span class="material-icons">clear</span> Clear Form
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- System Info -->
+                    <div class="form-card">
+                        <h3><span class="material-icons">info</span> System Information</h3>
+                        <div class="system-info">
+                            <div class="info-item">
+                                <span class="info-label">Total Students:</span>
+                                <span class="info-value" id="systemTotalStudents">0</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Today's Date:</span>
+                                <span class="info-value" id="systemTodayDate">-</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Attendance Records:</span>
+                                <span class="info-value" id="systemRecordsCount">0</span>
+                            </div>
+                            <div class="info-actions">
+                                <button class="btn btn-secondary" onclick="backupData()">
+                                    <span class="material-icons">backup</span> Backup Data
+                                </button>
+                                <button class="btn btn-success" onclick="exportToExcel()">
+                                    <span class="material-icons">table_chart</span> Export All to Excel
+                                </button>
+                                <button class="btn btn-info" onclick="exportComprehensiveReport()">
+                                    <span class="material-icons">description</span> Comprehensive Report
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Side - Student List & QR Generation -->
+                <div class="students-section">
+                    <!-- Student List -->
+                    <div class="students-card">
+                        <div class="card-header">
+                            <h3><span class="material-icons">school</span> Registered Students</h3>
+                            <div class="search-box">
+                                <input type="text" id="studentSearch" placeholder="Search students..." onkeyup="searchStudents()">
+                            </div>
+                        </div>
+                        
+                        <div class="students-list-container">
+                            <div id="registeredStudentsList" class="students-list">
+                                <!-- Students will be populated here -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- QR Code Generation -->
+                    <div class="qr-generation-card">
+                        <h3><span class="material-icons">qr_code_2</span> Generate QR Code</h3>
+                        <div id="selectedStudentInfo" class="selected-student-info hidden">
+                            <div class="student-detail">
+                                <strong>Selected Student:</strong>
+                                <span id="selectedStudentName">-</span>
+                            </div>
+                            <div class="student-detail">
+                                <strong>ID:</strong>
+                                <span id="selectedStudentId">-</span>
+                            </div>
+                        </div>
+
+                        <div class="qr-quality-options">
+                            <label>QR Code Quality:</label>
+                            <select id="qrQuality" onchange="updateQRQuality()">
+                                <option value="300">Standard (300x300)</option>
+                                <option value="500" selected>High (500x500)</option>
+                                <option value="800">Ultra (800x800)</option>
+                                <option value="1000">Maximum (1000x1000)</option>
+                            </select>
+                        </div>
+
+                        <div class="qr-preview-container">
+                            <div id="highQualityQR" class="qr-code-preview">
+                                <p>Select a student and generate QR code</p>
+                            </div>
+                        </div>
+
+                        <div class="qr-actions">
+                            <button id="generateQRBtn" class="btn btn-primary" onclick="generateHighQualityQR()" disabled>
+                                <span class="material-icons">qr_code_2</span> Generate QR Code
+                            </button>
+                            <button id="downloadQRBtn" class="btn btn-success" onclick="downloadHighQualityQR()" disabled>
+                                <span class="material-icons">download</span> Download QR Code
+                            </button>
+                            <button id="bulkQRBtn" class="btn btn-action" onclick="generateBulkQR()">
+                                <span class="material-icons">print</span> Bulk Generate All (A4)
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Reports Tab -->
+        <div id="reports" class="tab-content">
+            <div class="reports-header">
+                <h2><span class="material-icons">analytics</span> Analytics</h2>
+              
+            </div>
+            <div class="reports-content">
+                <div class="reports-card">
+                    <h3><span class="material-icons">insights</span> Attendance Analytics</h3>
+                    <div class="analytics-grid">
+                        <div class="analytic-card">
+                            <div class="analytic-icon"><span class="material-icons">analytics</span></div>
+                            <div class="analytic-content">
+                                <div class="analytic-value" id="totalAttendance">0</div>
+                                <div class="analytic-label">Total Records</div>
+                            </div>
+                        </div>
+                        <div class="analytic-card">
+                            <div class="analytic-icon"><span class="material-icons">check_circle</span></div>
+                            <div class="analytic-content">
+                                <div class="analytic-value" id="avgAttendance">0%</div>
+                                <div class="analytic-label">Average Attendance</div>
+                            </div>
+                        </div>
+                        <div class="analytic-card">
+                            <div class="analytic-icon"><span class="material-icons">calendar_today</span></div>
+                            <div class="analytic-content">
+                                <div class="analytic-value" id="daysTracked">0</div>
+                                <div class="analytic-label">Days Tracked</div>
+                            </div>
+                        </div>
+                        <div class="analytic-card">
+                            <div class="analytic-icon"><span class="material-icons">groups</span></div>
+                            <div class="analytic-content">
+                                <div class="analytic-value" id="activeStudents">0</div>
+                                <div class="analytic-label">Active Students</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- System Management in Reports -->
+                <div class="reports-card">
+                    <h3><span class="material-icons">settings</span> System Management</h3>
+                    <div class="system-management">
+                        <div class="management-actions">
+                            <button class="btn btn-info" onclick="generateAnalyticsReport()">
+                                <span class="material-icons">summarize</span> Generate Analytics Report
+                            </button>
+                            <button class="btn btn-warning" onclick="clearAttendanceHistory()">
+                                <span class="material-icons">delete_sweep</span> Clear Attendance History
+                            </button>
+                            <button class="btn btn-danger" onclick="resetSystemData()">
+                                <span class="material-icons">warning</span> Reset All Data
+                            </button>
+                        </div>
+                        <div style="margin-top: 15px; font-size: 0.9em; color: #6c757d;">
+                            <p><strong>Note:</strong> These actions are irreversible. Always backup your data before performing system resets.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="reports-card">
+                    <h3><span class="material-icons">history</span> Recent Attendance History</h3>
+                    <div id="recentHistory" class="recent-history">
+                        <!-- Recent attendance history will be shown here -->
+                    </div>
+                </div>
+
+                <!-- Export Options Card -->
+                <div class="reports-card">
+                    <h3><span class="material-icons">file_download</span> Export Options</h3>
+                    <div class="export-options">
+                        <div class="export-buttons">
+                            <button class="btn btn-success" onclick="exportToExcel()">
+                                <span class="material-icons">table_chart</span> Today's Attendance (Excel)
+                            </button>
+                            <button class="btn btn-action" onclick="exportAdvancedExcel('all')">
+                                <span class="material-icons">insights</span> Complete History (Excel)
+                            </button>
+                            <button class="btn btn-primary" onclick="exportStudentListExcel()">
+                                <span class="material-icons">school</span> Student List (Excel)
+                            </button>
+                            <button class="btn btn-info" onclick="exportComprehensiveReport()">
+                                <span class="material-icons">description</span> Comprehensive Report (CSV)
+                            </button>
+                            <button class="btn btn-secondary" onclick="exportAllData()">
+                                <span class="material-icons">backup</span> Full Backup (JSON)
+                            </button>
+                        </div>
+                        <div class="export-info">
+                            <p><strong>Formats Available:</strong></p>
+                            <ul>
+                                <li><span class="material-icons">table_chart</span> <strong>Excel/CSV</strong> - For spreadsheet analysis</li>
+                                <li><span class="material-icons">insights</span> <strong>Complete History</strong> - All attendance records</li>
+                                <li><span class="material-icons">school</span> <strong>Student List</strong> - Registered students database</li>
+                                <li><span class="material-icons">description</span> <strong>Comprehensive Report</strong> - All data combined</li>
+                                <li><span class="material-icons">backup</span> <strong>JSON Backup</strong> - Full system backup</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Manual Entry Modal -->
+        <div id="manualEntryModal" class="modal hidden">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2><span class="material-icons">edit</span> Manual Attendance Entry</h2>
+                    <button class="close-btn" onclick="closeManualEntryModal()">×</button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="manualStudentSelect">Select Student:</label>
+                        <select id="manualStudentSelect" class="manual-select">
+                            <option value="">Choose a student</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="manualDate">Date:</label>
+                        <input type="date" id="manualDate" class="manual-input">
+                    </div>
+                    <div class="form-group">
+                        <label for="manualTime">Time:</label>
+                        <input type="time" id="manualTime" class="manual-input">
+                    </div>
+                    <div class="form-group">
+                        <label>Status:</label>
+                        <div class="status-options">
+                            <label class="status-option">
+                                <input type="radio" name="attendanceStatus" value="present" checked>
+                                <span class="status-present">Present</span>
+                            </label>
+                            <label class="status-option">
+                                <input type="radio" name="attendanceStatus" value="absent">
+                                <span class="status-absent">Absent</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" onclick="closeManualEntryModal()">Cancel</button>
+                    <button class="btn btn-primary" onclick="saveManualEntry()">Save Attendance</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bulk QR Code Modal -->
+        <div id="bulkQRModal" class="modal hidden">
+            <div class="modal-content bulk-qr-modal">
+                <div class="modal-header">
+                    <h2><span class="material-icons">print</span> Bulk QR Codes - A4 Format</h2>
+                    <button class="close-btn" onclick="closeBulkQRModal()">×</button>
+                </div>
+                <div class="modal-body">
+                    <div id="bulkQRContainer" class="bulk-qr-container">
+                        <!-- QR codes will be generated here -->
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" onclick="closeBulkQRModal()">Close</button>
+                    <button class="btn btn-primary" onclick="printBulkQR()"><span class="material-icons">print</span> Print A4 Sheet</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Scan Result Modal -->
+        <div id="scanModal" class="modal hidden">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2><span class="material-icons">check_circle</span> Attendance Recorded!</h2>
+                    <button class="close-btn" onclick="closeModal()">×</button>
+                </div>
+                <div class="modal-body">
+                    <div id="scanResultContent">
+                        <!-- Scan results will appear here -->
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-primary" onclick="closeModal()">Continue Scanning</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modern Glassy Bottom Navigation -->
+    <div class="bottom-nav">
+        <div class="nav-item active" onclick="switchTab('scanner')">
+            <span class="material-icons nav-icon">qr_code_scanner</span>
+            <span>Scanner</span>
+        </div>
+        <div class="nav-item" onclick="switchTab('admin')">
+            <span class="material-icons nav-icon">admin_panel_settings</span>
+            <span>Students</span>
+        </div>
+        <div class="nav-item" onclick="switchTab('reports')">
+            <span class="material-icons nav-icon">analytics</span>
+            <span>Reports</span>
+        </div>
+    </div>
+
+
+<script src="main.js"></script>
+</body>
+</html>
